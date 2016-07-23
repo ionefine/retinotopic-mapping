@@ -13,7 +13,18 @@ flickering checkerboard to a pixar movie in the background
 
 Written by Ione Fine and Geoff Boynton 2015-2016
 
+requires: psychtoolbox
 ****************************************************
+
+GETTING STARTED
+PLAYRETINOTOPY is the code that plays the stimulus.
+
+It reads in a movie, and simultaneously has subjects doing a task, saves the data.
+The first time you run it, use the pregenerated movie (JMD1_bar_1).
+ PlayRetinotopy(JMD1, bar, 1) will use that file 
+ 
+
+
 RetinotopyYork.m is the main experiment
 
 The keypress ‘t’ starts the stimulus.
