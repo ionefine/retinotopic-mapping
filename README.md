@@ -14,14 +14,12 @@ flickering checkerboard to a pixar movie in the background
 Written by Ione Fine and Geoff Boynton 2015-2016
 
 ****************************************************
-RetinotopyYork.m is the main experiment
+MainRetinotopy.m is the main experiment
 
-The keypress ‘t’ starts the stimulus.
-Escape, escapes
 
 INSTRUCTIONS FOR THE SIMON TASK
 
-Basically press the corresponding button (currently ‘q’ ’w’ ’a’ ’s’) to match the pattern of the colored segments. 
+Basically press the corresponding button (currently ‘1’ ’2’ ’3’ ’4’) to match the pattern of the colored segments. 
 The sequence will get longer each time you get it right. If you get it wrong it will flash and then start again with a sequence of 1.
 (If you have no idea what a Simon task is, look it up on the web before you run this, and it will make a lot more sense)
 
