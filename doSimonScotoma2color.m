@@ -1,232 +1,221 @@
 
-function  s=doSimonScotoma2color(display,s,curTime)
+function  task=doSimonScotoma2color(display,task,curTime)
 %s=doSimon(display,s,curTime)
 escPressed=0;
 
-switch s.action
+switch task.action
     case 'init'  %set up simon variables
         % 'simon' parameters
-        if ~isfield(s, 'scFac')
-            s.scFac=1;
+        if ~isfield(task, 'scFac')
+            task.scFac=1;
         end
         
-        s.size = [6,20,24,3]*s.scFac;  %pixels
-        s.gap = 2; %pixels
-        s.c = ceil(display.resolution/2)+s.fixoffset;
-        for i=1:length(s.size)
-            s.rect{i} = [-s.size(i)/2+s.c(1),-s.size(i)/2+s.c(2),+s.size(i)/2+s.c(1),+s.size(i)/2+s.c(2)];
+        task.size = angle2pix(display, task.apertures);  %pixels
+        task.gap = 2; %pixels
+        task.c = ceil(display.resolution/2)+task.fixoffset;
+        for i=1:length(task.size)
+            task.rect{i} = [-task.size(i)/2+task.c(1),-task.size(i)/2+task.c(2),+task.size(i)/2+task.c(1),+task.size(i)/2+task.c(2)];
         end
+                
+        task.color{1} = [0,0,255];
+        task.color{2} = [255,255,0];
+        task.color{3} = [0,255,0];
+        task.color{4} = [255,0,0];
+
+        task.seq = [];
+        task.maxLen = [];
+        task.i = 0;
         
-        s.ISI = 1;  %seconds
-        s.dur = .75;   %seconds
-        s.pauseDur = .5; %seconds
-        s.errDur = 1;  %seconds
-        s.errFreq = 4;  %Hz
+        task.state = 'off';
         
-        s.color{1} = [0,0,255];
-        s.color{2} = [255,255,0];
-        s.color{3} = [0,255,0];
-        s.color{4} = [255,0,0];
+        task.seq = task.goodKeys(ceil(rand(1)*length(task.goodKeys)));
+        task.pauseTill = 1;
+        task.action = 'play';
         
-        s.goodKeys = [2,3];
-        s.keys = {'1' '2','3' '4'};
+        task.event.type = 'switch to play';
+        task.event.time = 0;
+        task.event.num = 0;
+        task.numEvents = 1;
         
-        %s.keys = {'w','s','a','q'};  %for 1,2,3,4
-        
-        s.seq = [];
-        s.maxLen = [];
-        s.i = 0;
-        
-        s.state = 'off';
-        
-        s.seq = s.goodKeys(ceil(rand(1)*length(s.goodKeys)));
-        s.pauseTill = 1;
-        s.action = 'play';
-        
-        s.event.type = 'switch to play';
-        s.event.time = 0;
-        s.event.num = 0;
-        s.numEvents = 1;
-        
-        showSimon(display,s);
+        showSimon(display,task);
         
     case 'play'  %sequence playback mode
-        if s.pauseTill < curTime
-            t = mod(curTime,s.ISI);
+        if task.pauseTill < curTime
+            t = mod(curTime,task.ISI);
             
-            if strcmp(s.state,'off') && t<=s.dur
+            if strcmp(task.state,'off') && t<=task.dur
                 
-                s.i = s.i+1;
+                task.i = task.i+1;
                 
-                if s.i<=length(s.seq);
-                    s.show = s.seq(s.i);
-                    s.state = 'on';
+                if task.i<=length(task.seq);
+                    task.show = task.seq(task.i);
+                    task.state = 'on';
                     
-                    s.numEvents = s.numEvents+1;
-                    s.event(s.numEvents).type= 'play: on';
-                    s.event(s.numEvents).time = curTime;
-                    s.event(s.numEvents).num = s.show;
+                    task.numEvents = task.numEvents+1;
+                    task.event(task.numEvents).type= 'play: on';
+                    task.event(task.numEvents).time = curTime;
+                    task.event(task.numEvents).num = task.show;
                     
                 else
-                    s.numEvents = s.numEvents+1;
-                    s.event(s.numEvents).type= 'switch to recall';
-                    s.event(s.numEvents).time = curTime;
-                    s.event(s.numEvents).num = NaN;
+                    task.numEvents = task.numEvents+1;
+                    task.event(task.numEvents).type= 'switch to recall';
+                    task.event(task.numEvents).time = curTime;
+                    task.event(task.numEvents).num = NaN;
                     
-                    s.action = 'recall';
-                    s.state = 'off';
-                    s.i = 0;
+                    task.action = 'recall';
+                    task.state = 'off';
+                    task.i = 0;
                 end
                 
-            elseif strcmp(s.state,'on') && t> s.dur
-                s.numEvents = s.numEvents+1;
-                s.event(s.numEvents).type= 'play: off';
-                s.event(s.numEvents).time = curTime;
-                s.event(s.numEvents).num = s.show;
-                s.state = 'off';
+            elseif strcmp(task.state,'on') && t> task.dur
+                task.numEvents = task.numEvents+1;
+                task.event(task.numEvents).type= 'play: off';
+                task.event(task.numEvents).time = curTime;
+                task.event(task.numEvents).num = task.show;
+                task.state = 'off';
                 
             end
         end
-        showSimon(display,s);
+        showSimon(display,task);
         
     case 'recall'
-        if s.pauseTill<curTime
+        if task.pauseTill<curTime
             
             %see if a key is pressed
             [ keyIsDown, timeSecs, keyCode ] = KbCheck;
             
-            if keyIsDown && strcmp(s.state,'off') %a key is down: record the key and time pressed
+            if keyIsDown && strcmp(task.state,'off') %a key is down: record the key and time pressed
                 
                 keyPressed= KbName(keyCode);
                 
-                keyNum = find(strcmp(keyPressed(1),s.keys));
+                keyNum = find(strcmp(keyPressed(1),task.keys));
                 
                 if ~isempty(keyNum)
-                    s.show = keyNum;
-                    s.state = 'on';
-                    s.numEvents = s.numEvents+1;
-                    s.event(s.numEvents).type= 'recall: on';
-                    s.event(s.numEvents).time = curTime;
-                    s.event(s.numEvents).num = s.show;
+                    task.show = keyNum;
+                    task.state = 'on';
+                    task.numEvents = task.numEvents+1;
+                    task.event(task.numEvents).type= 'recall: on';
+                    task.event(task.numEvents).time = curTime;
+                    task.event(task.numEvents).num = task.show;
                 end
                 
-            elseif ~keyIsDown && strcmp(s.state,'on') %key just lifted
-                s.state = 'off';
-                s.numEvents = s.numEvents+1;
-                s.event(s.numEvents).type= 'recall: off';
-                s.event(s.numEvents).time = curTime;
-                s.event(s.numEvents).num = NaN;
+            elseif ~keyIsDown && strcmp(task.state,'on') %key just lifted
+                task.state = 'off';
+                task.numEvents = task.numEvents+1;
+                task.event(task.numEvents).type= 'recall: off';
+                task.event(task.numEvents).time = curTime;
+                task.event(task.numEvents).num = NaN;
                 
-                s.i = s.i+1;
-                if s.show ~= s.seq(s.i)
+                task.i = task.i+1;
+                if task.show ~= task.seq(task.i)
                     %incorrect
-                    s.maxLen = [s.maxLen,length(s.seq)-1];
-                    s.pauseTill = ceil(curTime+ s.errDur);
-                    s.action = 'error';
+                    task.maxLen = [task.maxLen,length(task.seq)-1];
+                    task.pauseTill = ceil(curTime+ task.errDur);
+                    task.action = 'error';
                     
-                    s.numEvents = s.numEvents+1;
-                    s.event(s.numEvents).type= 'error: start';
-                    s.event(s.numEvents).time = curTime;
-                    s.event(s.numEvents).num = s.seq(end);
+                    task.numEvents = task.numEvents+1;
+                    task.event(task.numEvents).type= 'error: start';
+                    task.event(task.numEvents).time = curTime;
+                    task.event(task.numEvents).num = task.seq(end);
                     
-                elseif s.i == length(s.seq)  %got the last one right
-                    s.seq = [s.seq,s.goodKeys(ceil(rand(1)*length(s.goodKeys)))];
-                    s.state = 'off';
-                    s.action = 'play';
-                    s.i = 0;
-                    s.pauseTill = ceil(curTime+ s.pauseDur) ;
+                elseif task.i == length(task.seq)  %got the last one right
+                    task.seq = [task.seq,task.goodKeys(ceil(rand(1)*length(task.goodKeys)))];
+                    task.state = 'off';
+                    task.action = 'play';
+                    task.i = 0;
+                    task.pauseTill = ceil(curTime+ task.pauseDur) ;
                     
-                    s.numEvents = s.numEvents+1;
-                    s.event(s.numEvents).type= 'switch to play';
-                    s.event(s.numEvents).time = curTime;
-                    s.event(s.numEvents).num = NaN;
+                    task.numEvents = task.numEvents+1;
+                    task.event(task.numEvents).type= 'switch to play';
+                    task.event(task.numEvents).time = curTime;
+                    task.event(task.numEvents).num = NaN;
                 end
             end
         end
-        showSimon(display,s);
+        showSimon(display,task);
     case 'error'
-        if curTime < s.pauseTill
-            ab = mod(curTime*s.errFreq,1);
-            s.show = s.seq(end);
+        if curTime < task.pauseTill
+            ab = mod(curTime*task.errFreq,1);
+            task.show = task.seq(end);
             if ab<.5
-                s.state = 'on';
+                task.state = 'on';
             else
-                s.state = 'off';
+                task.state = 'off';
             end
-            showSimon(display,s);
+            showSimon(display,task);
         else
-            s.i = 0;
-            s.seq = s.goodKeys(ceil(rand(1)*length(s.goodKeys)));
-            s.action = 'play';
-            s.state = 'off';
-            s.pauseTill = ceil(curTime+ s.pauseDur);
-            s.numEvents = s.numEvents+1;
-            s.event(s.numEvents).type= 'error: stop';
-            s.event(s.numEvents).time = curTime;
-            s.event(s.numEvents).num = NaN;
+            task.i = 0;
+            task.seq = task.goodKeys(ceil(rand(1)*length(task.goodKeys)));
+            task.action = 'play';
+            task.state = 'off';
+            task.pauseTill = ceil(curTime+ task.pauseDur);
+            task.numEvents = task.numEvents+1;
+            task.event(task.numEvents).type= 'error: stop';
+            task.event(task.numEvents).time = curTime;
+            task.event(task.numEvents).num = NaN;
         end
     case 'done'
-        s.maxLen = [s.maxLen,length(s.seq)-1];
-        s.numEvents = s.numEvents+1;
-        s.event(s.numEvents).type= 'done';
-        s.event(s.numEvents).time = curTime;
-        s.event(s.numEvents).num = NaN;
-        s.seq = [];
+        task.maxLen = [task.maxLen,length(task.seq)-1];
+        task.numEvents = task.numEvents+1;
+        task.event(task.numEvents).type= 'done';
+        task.event(task.numEvents).time = curTime;
+        task.event(task.numEvents).num = NaN;
+        task.seq = [];
 end
 end
 
-function showSimon(display,s)
-s.c = ceil(display.resolution/2)+s.fixoffset;
-for i=1:length(s.size)
-    s.rect{i} = [-s.size(i)/2+s.c(1),-s.size(i)/2+s.c(2),+s.size(i)/2+s.c(1),+s.size(i)/2+s.c(2)];
+function showSimon(display,task)
+task.c = ceil(display.resolution/2)+task.fixoffset;
+for i=1:length(task.size)
+    task.rect{i} = [-task.size(i)/2+task.c(1),-task.size(i)/2+task.c(2),+task.size(i)/2+task.c(1),+task.size(i)/2+task.c(2)];
 end
-switch s.state
+switch task.state
     case 'on';
-        Screen('FillOval',display.windowPtr,[100,100,100],s.rect{3});
-        if strcmp(s.action, 'error')
-            Screen('FillArc',display.windowPtr,[ 0 0 0 ],s.rect{2},180*(s.show-1)+s.rotAng,180);
+        Screen('FillOval',display.windowPtr,[100,100,100],task.rect{3});
+        if strcmp(task.action, 'error')
+            Screen('FillArc',display.windowPtr,[ 0 0 0 ],task.rect{2},180*(task.show-1)+task.rotAng,180);
         else
-            Screen('FillArc',display.windowPtr,s.color{s.show},s.rect{2},180*(s.show-1)+s.rotAng,180);
+            Screen('FillArc',display.windowPtr,task.color{task.show},task.rect{2},180*(task.show-1)+task.rotAng,180);
         end
         
-        Screen('FillOval',display.windowPtr,[128,128,128],s.rect{1});
-        Screen('FillOval',display.windowPtr,[255,255,255],s.rect{4});
+        Screen('FillOval',display.windowPtr,[128,128,128],task.rect{1});
+        Screen('FillOval',display.windowPtr,[255,255,255],task.rect{4});
         
-        if s.rotAng==0
-            Screen('FillRect',display.windowPtr,[128,128,128],[s.c(1)-s.gap/2,s.c(2)-s.size(2)/2,s.c(1)+s.gap/2,s.c(2)+s.size(2)/2]);
-        elseif s.rotAng==-45
+        if task.rotAng==0
+            Screen('FillRect',display.windowPtr,[128,128,128],[task.c(1)-task.gap/2,task.c(2)-task.size(2)/2,task.c(1)+task.gap/2,task.c(2)+task.size(2)/2]);
+        elseif task.rotAng==-45
             Screen('DrawLine',display.windowPtr, [128,128,128], ...
-                s.c(1)-(.75*s.size(2))/2, s.c(2)-(.75*s.size(2))/2, ...
-                s.c(1)+(.75*s.size(2))/2 , s.c(2)+(.75*s.size(2))/2, min([s.scFac 4]));
-        elseif s.rotAng==45
+                task.c(1)-(.75*task.size(2))/2, task.c(2)-(.75*task.size(2))/2, ...
+                task.c(1)+(.75*task.size(2))/2 , task.c(2)+(.75*task.size(2))/2, min([task.scFac 4]));
+        elseif task.rotAng==45
             Screen('DrawLine',display.windowPtr, [128,128,128], ...
-                s.c(1)-(.75*s.size(2))/2, s.c(2)+(.75*s.size(2))/2 , ...
-                s.c(1)+(.75*s.size(2))/2 , s.c(2)-(.75*s.size(2))/2, min([s.scFac 4]));          
-        elseif s.rotAng==90
-            Screen('FillRect',display.windowPtr,[128,128,128],[s.c(1)-s.size(2)/2,s.c(2)-s.gap/2,s.c(1)+s.size(2)/2,s.c(2)+s.gap/2]);
+                task.c(1)-(.75*task.size(2))/2, task.c(2)+(.75*task.size(2))/2 , ...
+                task.c(1)+(.75*task.size(2))/2 , task.c(2)-(.75*task.size(2))/2, min([task.scFac 4]));          
+        elseif task.rotAng==90
+            Screen('FillRect',display.windowPtr,[128,128,128],[task.c(1)-task.size(2)/2,task.c(2)-task.gap/2,task.c(1)+task.size(2)/2,task.c(2)+task.gap/2]);
         end
     case 'off'
-        Screen('FillOval',display.windowPtr,[100,100,100],s.rect{3});
-        Screen('FillOval',display.windowPtr,[128,128,128],s.rect{1});
-        Screen('FillOval',display.windowPtr,[255,255,255],s.rect{4});
+        Screen('FillOval',display.windowPtr,[100,100,100],task.rect{3});
+        Screen('FillOval',display.windowPtr,[128,128,128],task.rect{1});
+        Screen('FillOval',display.windowPtr,[255,255,255],task.rect{4});
         
-         if s.rotAng==0
-            Screen('FillRect',display.windowPtr,[128,128,128],[s.c(1)-s.gap/2,s.c(2)-s.size(2)/2,s.c(1)+s.gap/2,s.c(2)+s.size(2)/2]);
-        elseif s.rotAng==-45
+         if task.rotAng==0
+            Screen('FillRect',display.windowPtr,[128,128,128],[task.c(1)-task.gap/2,task.c(2)-task.size(2)/2,task.c(1)+task.gap/2,task.c(2)+task.size(2)/2]);
+        elseif task.rotAng==-45
             Screen('DrawLine',display.windowPtr, [128,128,128], ...
-                s.c(1)-(.75*s.size(2))/2, s.c(2)-(.75*s.size(2))/2, ...
-                s.c(1)+(.75*s.size(2))/2 , s.c(2)+(.75*s.size(2))/2, min([s.scFac 4]));
-        elseif s.rotAng==45
+                task.c(1)-(.75*task.size(2))/2, task.c(2)-(.75*task.size(2))/2, ...
+                task.c(1)+(.75*task.size(2))/2 , task.c(2)+(.75*task.size(2))/2, min([task.scFac 4]));
+        elseif task.rotAng==45
             Screen('DrawLine',display.windowPtr, [128,128,128], ...
-                s.c(1)-(.75*s.size(2))/2, s.c(2)+(.75*s.size(2))/2 , ...
-                s.c(1)+(.75*s.size(2))/2 , s.c(2)-(.75*s.size(2))/2, min([s.scFac 4]));
+                task.c(1)-(.75*task.size(2))/2, task.c(2)+(.75*task.size(2))/2 , ...
+                task.c(1)+(.75*task.size(2))/2 , task.c(2)-(.75*task.size(2))/2, min([task.scFac 4]));
             
-        elseif s.rotAng==90
-            Screen('FillRect',display.windowPtr,[128,128,128],[s.c(1)-s.size(2)/2,s.c(2)-s.gap/2,s.c(1)+s.size(2)/2,s.c(2)+s.gap/2]);
+        elseif task.rotAng==90
+            Screen('FillRect',display.windowPtr,[128,128,128],[task.c(1)-task.size(2)/2,task.c(2)-task.gap/2,task.c(1)+task.size(2)/2,task.c(2)+task.gap/2]);
         end
         
     otherwise
-        disp(sprintf('state %s not recognized',s.state));
+        disp(sprintf('state %s not recognized',task.state));
 end
 end
 
