@@ -1,4 +1,4 @@
-# retinotopic-mapping
+﻿# retinotopic-mapping
 simple flexible retinotopy code
 
 This retinotopic code was written to be extremely flexible, work on a number of scanners, and serve a number of purposes, these include
@@ -13,8 +13,14 @@ flickering checkerboard to a pixar movie in the background
 
 Written by Ione Fine and Geoff Boynton 2015-2016
 
+requires: psychtoolbox
 ****************************************************
+
 MainRetinotopy.m is the main experiment
+=======
+
+GETTING STARTED
+PLAYRETINOTOPY is the code that creates and plays the stimulus.
 
 
 INSTRUCTIONS FOR THE SIMON TASK
