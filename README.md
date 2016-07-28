@@ -1,4 +1,4 @@
-# retinotopic-mapping
+﻿# retinotopic-mapping
 simple flexible retinotopy code
 
 This retinotopic code was written to be extremely flexible, work on a number of scanners, and serve a number of purposes, these include
@@ -16,23 +16,16 @@ Written by Ione Fine and Geoff Boynton 2015-2016
 requires: psychtoolbox
 ****************************************************
 
+MainRetinotopy.m is the main experiment
+=======
+
 GETTING STARTED
-PLAYRETINOTOPY is the code that plays the stimulus.
+PLAYRETINOTOPY is the code that creates and plays the stimulus.
 
-It reads in a movie, and simultaneously has subjects doing a task, saves the data.
-The first time you run it, use the pregenerated movie (JMD1_bar_1).
- PlayRetinotopy(JMD1, bar, 1) will use that file 
- 
-
-
-RetinotopyYork.m is the main experiment
-
-The keypress ‘t’ starts the stimulus.
-Escape, escapes
 
 INSTRUCTIONS FOR THE SIMON TASK
 
-Basically press the corresponding button (currently ‘q’ ’w’ ’a’ ’s’) to match the pattern of the colored segments. 
+Basically press the corresponding button (currently ‘1’ ’2’ ’3’ ’4’) to match the pattern of the colored segments. 
 The sequence will get longer each time you get it right. If you get it wrong it will flash and then start again with a sequence of 1.
 (If you have no idea what a Simon task is, look it up on the web before you run this, and it will make a lot more sense)
 
